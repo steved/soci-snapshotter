@@ -253,6 +253,9 @@ func shouldAuthenticate(resp *http.Response) bool {
 					// ECR's 403 doesn't return a Www-Authenticate and so doesn't trigger the
 					// basic re-authentication in containerd's docker authorizer
 					authenticateHeader := http.CanonicalHeaderKey("WWW-Authenticate")
+					if resp.Header == nil {
+						resp.Header = map[string][]string{}
+					}
 					if _, exists := resp.Header[authenticateHeader]; !exists {
 						resp.Header[authenticateHeader] = []string{"Basic realm=\"\",service=\"ecr.amazonaws.com\""}
 					}
