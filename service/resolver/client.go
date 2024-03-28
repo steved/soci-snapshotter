@@ -250,6 +250,13 @@ func shouldAuthenticate(resp *http.Response) bool {
 		for _, e := range errs {
 			if err, ok := e.(docker.Error); ok {
 				if err.Message == ecrTokenExpiredResponseMessage {
+					// ECR's 403 doesn't return a Www-Authenticate and so doesn't trigger the
+					// basic re-authentication in containerd's docker authorizer
+					authenticateHeader := http.CanonicalHeaderKey("WWW-Authenticate")
+					if _, exists := resp.Header[authenticateHeader]; !exists {
+						resp.Header[authenticateHeader] = []string{"Basic realm=\"\",service=\"ecr.amazonaws.com\""}
+					}
+
 					return true
 				}
 			}
